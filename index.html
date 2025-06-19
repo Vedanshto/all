@@ -108,8 +108,18 @@
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline mr-1" viewBox="0 0 20 20" fill="currentColor">
                                     <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
                                 </svg>
-                                Download CSV
+                               Diabetes CSV
                             </button>
+                     <button id="download-ckd-data-btn" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors hidden">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline mr-1" viewBox="0 0 20 20" fill="currentColor">
+        <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+    </svg>
+    CKD CSV
+</button>
+
+
+
+
                             <button id="download-btn" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors hidden">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline mr-1" viewBox="0 0 20 20" fill="currentColor">
                                     <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
@@ -145,13 +155,8 @@
                                     <div><a href="http://127.0.0.1:5000"><h1>click</h1></a></div>
                                     <div class="text-sm opacity-80">Risk Level</div>
                                 </div>
-                                <div id="heart-risk" class="health-risk-card p-4 rounded-lg text-white">
-                                    <div class="flex items-center mb-2">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                                        </svg>
-                                        <span class="font-medium">Heart Disease</span>
-                                    </div>
+                                <div id="heart-risk" class="health-risk-card p-4 rounded-lg text-white" style="background-color: white; width: 10px;">
+                                    
                                     <div class="text-2xl font-bold mb-1">-</div>
                                     <div class="text-sm opacity-80">Risk Level</div>
                                 </div>
@@ -163,6 +168,7 @@
                                         <span class="font-medium">Kidney Function</span>
                                     </div>
                                     <div class="text-2xl font-bold mb-1">-</div>
+                                    <h1><a href="http://127.0.0.1:5050">click</a></h1>
                                     <div class="text-sm opacity-80">Risk Level</div>
                                 </div>
                             </div>
@@ -171,7 +177,7 @@
 
                     <div id="ocr-text-container" class="hidden mt-8">
                         <div class="flex justify-between items-center mb-2">
-                            <h3 class="text-lg font-semibold text-gray-700">Extracted Text</h3>
+                            
                             <button id="copy-text-btn" class="text-sm text-indigo-600 hover:text-indigo-800 flex items-center">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
@@ -184,12 +190,6 @@
                 </div>
             </div>
         </div>
-
-        <!-- Footer -->
-        <footer class="mt-12 text-center text-gray-500 text-sm">
-            <p>© 2023 Health Analytics Platform. For educational purposes only.</p>
-            <p class="mt-1">Not intended for medical diagnosis. Consult a healthcare professional.</p>
-        </footer>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1/dist/tesseract.min.js"></script>
@@ -638,7 +638,36 @@
             // Show empty state
             emptyState.classList.remove('hidden');
         }
+        document.getElementById("download-ckd-data-btn").classList.remove("hidden");
 
+         // CKD Download Button Function
+    document.getElementById("download-ckd-data-btn").addEventListener("click", function () {
+        // Column headers
+        const headers = [
+            "age", "bp", "sg", "al", "su", "rbc", "pc", "pcc", "ba",
+            "bgr", "bu", "sc", "sod", "pot", "hemo", "pcv", "wc", "rc",
+            "htn", "dm", "cad", "appet", "pe", "ane", "classification"
+        ];
+
+        // Dummy sample row (replace this with extracted data if needed)
+        const row = [
+            "45", "80", "1.01", "2", "0", "normal", "normal", "notpresent", "notpresent",
+            "130", "50", "1.1", "140", "4.7", "14.8", "42", "7500", "5.0",
+            "yes", "yes", "no", "good", "no", "no", "ckd"
+        ];
+
+        // Combine header and row
+        const csvContent = headers.join(",") + "\n" + row.join(",");
+
+        // Create a blob and download
+        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = "ckd_data.csv";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    });
         // Initialize the app
         resetApp();
     </script>
