@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Advanced Blood Report Analyzer</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body {
@@ -140,7 +139,7 @@
                                 <div id="heart-risk" class="health-risk-card p-4 rounded-lg text-white">
                                     <div class="flex items-center mb-2">
                                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                                         </svg>
                                         <span class="font-medium">Heart Disease</span>
                                     </div>
@@ -157,13 +156,6 @@
                                     <div class="text-2xl font-bold mb-1">-</div>
                                     <div class="text-sm opacity-80">Risk Level</div>
                                 </div>
-                            </div>
-                        </div>
-
-                        <div id="trends-section" class="hidden">
-                            <h3 class="text-lg font-semibold text-gray-700 mb-4">Historical Trends</h3>
-                            <div class="bg-white rounded-lg p-4">
-                                <canvas id="trends-chart" height="300"></canvas>
                             </div>
                         </div>
                     </div>
@@ -233,7 +225,6 @@
         const bloodComponentsSection = document.getElementById('blood-components');
         const componentsGrid = document.getElementById('components-grid');
         const healthRiskSection = document.getElementById('health-risk');
-        const trendsSection = document.getElementById('trends-section');
         const ocrTextContainer = document.getElementById('ocr-text-container');
         const ocrText = document.getElementById('ocr-text');
         const copyTextBtn = document.getElementById('copy-text-btn');
@@ -314,7 +305,6 @@
                 // Show results sections
                 bloodComponentsSection.classList.remove('hidden');
                 healthRiskSection.classList.remove('hidden');
-                trendsSection.classList.remove('hidden');
                 ocrTextContainer.classList.remove('hidden');
                 
                 // Show clear button
@@ -332,9 +322,6 @@
                 // Calculate health risks
                 const risks = calculateHealthRisks(components);
                 renderHealthRisks(risks);
-                
-                // Render trends chart
-                renderTrendsChart(components);
 
             } catch (error) {
                 console.error('OCR Error:', error);
@@ -526,57 +513,6 @@
             }
         }
 
-        function renderTrendsChart(components) {
-            const ctx = document.getElementById('trends-chart').getContext('2d');
-            
-            // Sample data - in a real app, this would come from historical records
-            const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
-            const glucoseData = [95, 98, 102, 105, 108, 110];
-            const hemoglobinData = [14.5, 14.2, 13.8, 13.5, 13.2, 13.0];
-            
-            new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [
-                        {
-                            label: 'Glucose (mg/dL)',
-                            data: glucoseData,
-                            borderColor: '#3b82f6',
-                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                            tension: 0.3,
-                            fill: true
-                        },
-                        {
-                            label: 'Hemoglobin (g/dL)',
-                            data: hemoglobinData,
-                            borderColor: '#10b981',
-                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                            tension: 0.3,
-                            fill: true
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            position: 'top',
-                        },
-                        tooltip: {
-                            mode: 'index',
-                            intersect: false,
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: false
-                        }
-                    }
-                }
-            });
-        }
-
         function copyOcrText() {
             navigator.clipboard.writeText(ocrText.textContent)
                 .then(() => {
@@ -640,7 +576,6 @@
             // Hide results
             bloodComponentsSection.classList.add('hidden');
             healthRiskSection.classList.add('hidden');
-            trendsSection.classList.add('hidden');
             ocrTextContainer.classList.add('hidden');
             
             // Hide buttons
@@ -649,16 +584,6 @@
             
             // Show empty state
             emptyState.classList.remove('hidden');
-            
-            // Clear chart if exists
-            const chartCanvas = document.getElementById('trends-chart');
-            if (chartCanvas) {
-                chartCanvas.remove();
-                const newCanvas = document.createElement('canvas');
-                newCanvas.id = 'trends-chart';
-                newCanvas.height = 300;
-                trendsSection.querySelector('.bg-white').appendChild(newCanvas);
-            }
         }
 
         // Initialize the app
