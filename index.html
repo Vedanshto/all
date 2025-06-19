@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Blood Report Analyzer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f8fafc;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .progress-ring__circle {
+            transition: stroke-dashoffset 0.7s;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+        .file-upload:hover {
+            border-color: #6366f1;
+            background-color: #e0e7ff;
+        }
+        .file-upload.drag-over {
+            border-color: #6366f1;
+            background-color: #c7d2fe;
+        }
+        .health-risk-low {
+            background-color: #10b981;
+        }
+        .health-risk-medium {
+            background-color: #f59e0b;
+        }
+        .health-risk-high {
+            background-color: #ef4444;
+        }
+        .animated-fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header Section -->
+        <header class="text-center mb-10">
+            <h1 class="text-4xl font-bold text-indigo-800 mb-2">Advanced Blood Report Analyzer</h1>
+            <p class="text-lg text-indigo-600 max-w-2xl mx-auto">
+                Upload your blood test results to get comprehensive analysis, health insights, and predictive risk assessments.
+            </p>
+        </header>
+
+        <!-- Main Content -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Upload Section -->
+            <div class="lg:col-span-1">
+                <div class="glass-card p-6 h-full">
+                    <h2 class="text-xl font-semibold text-gray-800 mb-4">Upload Your Report</h2>
+                    <div id="upload-container" class="mb-6">
+                        <div id="drop-area" class="file-upload border-2 border-dashed border-gray-300 rounded-lg p-8 text-center cursor-pointer transition-colors duration-300">
+                            <div class="flex flex-col items-center justify-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-indigo-500 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                </svg>
+                                <p class="text-gray-600 mb-2">Drag & drop your blood report image here</p>
+                                <p class="text-sm text-gray-500 mb-4">or</p>
+                                <label for="file-input" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors cursor-pointer">
+                                    Browse Files
+                                </label>
+                                <input id="file-input" type="file" accept="image/*" class="hidden">
+                            </div>
+                        </div>
+                        <p id="file-name" class="text-sm text-gray-500 mt-2 hidden"></p>
+                    </div>
+
+                    <div id="ocr-progress" class="hidden">
+                        <div class="flex justify-between mb-1">
+                            <span class="text-sm font-medium text-indigo-700">Processing...</span>
+                            <span id="progress-percent" class="text-sm font-medium text-indigo-700">0%</span>
+                        </div>
+                        <div class="w-full bg-gray-200 rounded-full h-2.5">
+                            <div id="progress-bar" class="bg-indigo-600 h-2.5 rounded-full" style="width: 0%"></div>
+                        </div>
+                    </div>
+
+                    <button id="clear-btn" class="w-full mt-4 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors hidden">
+                        Clear Results
+                    </button>
+                </div>
+            </div>
+
+            <!-- Results Section -->
+            <div class="lg:col-span-2">
+                <div id="results-container" class="glass-card p-6">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 class="text-xl font-semibold text-gray-800">Analysis Results</h2>
+                        <button id="download-btn" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors hidden">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline mr-1" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+                            </svg>
+                            Download Report
+                        </button>
+                    </div>
+
+                    <div id="empty-state" class="text-center py-12">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <h3 class="text-lg font-medium text-gray-500 mb-2">No results yet</h3>
+                        <p class="text-gray-400">Upload a blood test report to see the analysis</p>
+                    </div>
+
+                    <div id="blood-components" class="hidden">
+                        <h3 class="text-lg font-semibold text-gray-700 mb-4">Blood Components</h3>
+                        <div id="components-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8"></div>
+                        
+                        <div id="health-risk" class="hidden">
+                            <h3 class="text-lg font-semibold text-gray-700 mb-4">Health Risk Assessment</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                                <div id="diabetes-risk" class="health-risk-card p-4 rounded-lg text-white">
+                                    <div class="flex items-center mb-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                                        </svg>
+                                        <span class="font-medium">Diabetes</span>
+                                    </div>
+                                    <div class="text-2xl font-bold mb-1">-</div>
+                                    <div class="text-sm opacity-80">Risk Level</div>
+                                </div>
+                                <div id="heart-risk" class="health-risk-card p-4 rounded-lg text-white">
+                                    <div class="flex items-center mb-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                                        </svg>
+                                        <span class="font-medium">Heart Disease</span>
+                                    </div>
+                                    <div class="text-2xl font-bold mb-1">-</div>
+                                    <div class="text-sm opacity-80">Risk Level</div>
+                                </div>
+                                <div id="kidney-risk" class="health-risk-card p-4 rounded-lg text-white">
+                                    <div class="flex items-center mb-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                                        </svg>
+                                        <span class="font-medium">Kidney Function</span>
+                                    </div>
+                                    <div class="text-2xl font-bold mb-1">-</div>
+                                    <div class="text-sm opacity-80">Risk Level</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="trends-section" class="hidden">
+                            <h3 class="text-lg font-semibold text-gray-700 mb-4">Historical Trends</h3>
+                            <div class="bg-white rounded-lg p-4">
+                                <canvas id="trends-chart" height="300"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="ocr-text-container" class="hidden mt-8">
+                        <div class="flex justify-between items-center mb-2">
+                            <h3 class="text-lg font-semibold text-gray-700">Extracted Text</h3>
+                            <button id="copy-text-btn" class="text-sm text-indigo-600 hover:text-indigo-800 flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                                </svg>
+                                Copy Text
+                            </button>
+                        </div>
+                        <div id="ocr-text" class="bg-gray-50 p-4 rounded-lg text-gray-600 text-sm overflow-auto max-h-60"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="mt-12 text-center text-gray-500 text-sm">
+            <p>© 2023 Health Analytics Platform. For educational purposes only.</p>
+            <p class="mt-1">Not intended for medical diagnosis. Consult a healthcare professional.</p>
+        </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1/dist/tesseract.min.js"></script>
+    <script>
+        // Configuration
+        const bloodComponents = {
+            'WBC': { label: "White Blood Cells (WBC)", low: 4.0, high: 11.0, units: '10³/µL', keys: ['wbc', 'white blood cell', 'white blood cells', 'w b c'] },
+            'RBC': { label: "Red Blood Cells (RBC)", low: 4.7, high: 6.1, units: '10⁶/µL', keys: ['rbc', 'red blood cell', 'red blood cells', 'r b c'] },
+            'Hemoglobin': { label: "Hemoglobin (Hb)", low: 13.5, high: 17.5, units: 'g/dL', keys: ['hemoglobin', 'hb', 'hgb'] },
+            'Hematocrit': { label: "Hematocrit (Hct)", low: 41, high: 53, units: '%', keys: ['hematocrit', 'hct'] },
+            'Platelets': { label: "Platelets", low: 150, high: 450, units: '10³/µL', keys: ['platelet', 'platelets'] },
+            'MCV': { label: "Mean Corpuscular Volume (MCV)", low: 80, high: 100, units: 'fL', keys: ['mean corpuscular volume', 'mcv'] },
+            'MCH': { label: "Mean Corpuscular Hemoglobin (MCH)", low: 27, high: 33, units: 'pg', keys: ['mean corpuscular hemoglobin', 'mch'] },
+            'MCHC': { label: "Mean Corpuscular Hemoglobin Concentration (MCHC)", low: 32, high: 36, units: 'g/dL', keys: ['mean corpuscular hemoglobin concentration', 'mchc'] },
+            'RDW': { label: "Red Cell Distribution Width (RDW)", low: 11.5, high: 14.5, units: '%', keys: ['red cell distribution width', 'rdw'] },
+            'Glucose': { label: "Glucose", low: 70, high: 100, units: 'mg/dL', keys: ['glucose', 'blood sugar'] },
+            'Creatinine': { label: "Creatinine", low: 0.7, high: 1.3, units: 'mg/dL', keys: ['creatinine'] },
+            'BUN': { label: "Blood Urea Nitrogen (BUN)", low: 7, high: 20, units: 'mg/dL', keys: ['bun', 'blood urea nitrogen'] },
+            'Sodium': { label: "Sodium", low: 135, high: 145, units: 'mEq/L', keys: ['sodium', 'na'] },
+            'Potassium': { label: "Potassium", low: 3.5, high: 5.1, units: 'mEq/L', keys: ['potassium', 'k'] },
+            'Chloride': { label: "Chloride", low: 98, high: 107, units: 'mEq/L', keys: ['chloride', 'cl'] },
+            'CO2': { label: "Carbon Dioxide (CO2)", low: 22, high: 30, units: 'mEq/L', keys: ['co2', 'carbon dioxide'] },
+            'Calcium': { label: "Calcium", low: 8.5, high: 10.2, units: 'mg/dL', keys: ['calcium', 'ca'] },
+            'Protein': { label: "Total Protein", low: 6.0, high: 8.3, units: 'g/dL', keys: ['total protein', 'protein'] },
+            'Albumin': { label: "Albumin", low: 3.5, high: 5.0, units: 'g/dL', keys: ['albumin'] },
+            'Bilirubin': { label: "Bilirubin", low: 0.1, high: 1.2, units: 'mg/dL', keys: ['bilirubin'] },
+            'ALP': { label: "Alkaline Phosphatase (ALP)", low: 44, high: 147, units: 'U/L', keys: ['alkaline phosphatase', 'alp'] },
+            'ALT': { label: "Alanine Aminotransferase (ALT)", low: 7, high: 55, units: 'U/L', keys: ['alanine aminotransferase', 'alt'] },
+            'AST': { label: "Aspartate Aminotransferase (AST)", low: 8, high: 48, units: 'U/L', keys: ['aspartate aminotransferase', 'ast'] }
+        };
+
+        // DOM Elements
+        const dropArea = document.getElementById('drop-area');
+        const fileInput = document.getElementById('file-input');
+        const fileName = document.getElementById('file-name');
+        const ocrProgress = document.getElementById('ocr-progress');
+        const progressBar = document.getElementById('progress-bar');
+        const progressPercent = document.getElementById('progress-percent');
+        const clearBtn = document.getElementById('clear-btn');
+        const downloadBtn = document.getElementById('download-btn');
+        const emptyState = document.getElementById('empty-state');
+        const bloodComponentsSection = document.getElementById('blood-components');
+        const componentsGrid = document.getElementById('components-grid');
+        const healthRiskSection = document.getElementById('health-risk');
+        const trendsSection = document.getElementById('trends-section');
+        const ocrTextContainer = document.getElementById('ocr-text-container');
+        const ocrText = document.getElementById('ocr-text');
+        const copyTextBtn = document.getElementById('copy-text-btn');
+        const diabetesRiskCard = document.getElementById('diabetes-risk');
+        const heartRiskCard = document.getElementById('heart-risk');
+        const kidneyRiskCard = document.getElementById('kidney-risk');
+
+        // Event Listeners
+        dropArea.addEventListener('click', () => fileInput.click());
+        dropArea.addEventListener('dragover', handleDragOver);
+        dropArea.addEventListener('dragleave', handleDragLeave);
+        dropArea.addEventListener('drop', handleDrop);
+        fileInput.addEventListener('change', handleFileSelect);
+        clearBtn.addEventListener('click', resetApp);
+        copyTextBtn.addEventListener('click', copyOcrText);
+        downloadBtn.addEventListener('click', downloadReport);
+
+        // Functions
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            dropArea.classList.add('drag-over');
+        }
+
+        function handleDragLeave(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            dropArea.classList.remove('drag-over');
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            dropArea.classList.remove('drag-over');
+            
+            if (e.dataTransfer.files.length) {
+                fileInput.files = e.dataTransfer.files;
+                handleFileSelect({ target: fileInput });
+            }
+        }
+
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            // Display file name
+            fileName.textContent = file.name;
+            fileName.classList.remove('hidden');
+            
+            // Show processing UI
+            emptyState.classList.add('hidden');
+            ocrProgress.classList.remove('hidden');
+            dropArea.classList.add('hidden');
+            
+            // Process the file
+            processImage(file);
+        }
+
+        async function processImage(file) {
+            try {
+                const { data } = await Tesseract.recognize(
+                    file,
+                    'eng',
+                    {
+                        logger: m => {
+                            if (m.status === 'recognizing text') {
+                                const progress = Math.round(m.progress * 100);
+                                progressBar.style.width = `${progress}%`;
+                                progressPercent.textContent = `${progress}%`;
+                            }
+                        }
+                    }
+                );
+
+                // Hide progress bar
+                ocrProgress.classList.add('hidden');
+                
+                // Show results sections
+                bloodComponentsSection.classList.remove('hidden');
+                healthRiskSection.classList.remove('hidden');
+                trendsSection.classList.remove('hidden');
+                ocrTextContainer.classList.remove('hidden');
+                
+                // Show clear button
+                clearBtn.classList.remove('hidden');
+                downloadBtn.classList.remove('hidden');
+
+                // Process the extracted text
+                const extractedText = data.text;
+                ocrText.textContent = extractedText;
+                
+                // Parse blood components
+                const components = parseBloodReportText(extractedText);
+                renderBloodComponents(components);
+                
+                // Calculate health risks
+                const risks = calculateHealthRisks(components);
+                renderHealthRisks(risks);
+                
+                // Render trends chart
+                renderTrendsChart(components);
+
+            } catch (error) {
+                console.error('OCR Error:', error);
+                ocrProgress.classList.add('hidden');
+                emptyState.classList.remove('hidden');
+                emptyState.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-red-500 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <h3 class="text-lg font-medium text-gray-700 mb-2">Error Processing Image</h3>
+                    <p class="text-gray-500">Please try again with a clearer image.</p>
+                `;
+            }
+        }
+
+        function parseBloodReportText(text) {
+            const foundComponents = {};
+            const lines = text.replace(/\r\n/g, '\n').split('\n');
+
+            for (const [compKey, comp] of Object.entries(bloodComponents)) {
+                let foundValue = null;
+                
+                for (const line of lines) {
+                    if (approximateKeyMatch(line, comp.keys)) {
+                        const nums = line.match(/(\d{1,3}\.?\d{0,3})/g);
+                        if (nums && nums.length > 0) {
+                            for (const n of nums) {
+                                const val = parseFloat(n);
+                                if (!isNaN(val)) {
+                                    if (val > comp.low / 3 && val < comp.high * 3) {
+                                        foundValue = val;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    if (foundValue !== null) break;
+                }
+                
+                if (foundValue !== null) {
+                    foundComponents[compKey] = foundValue;
+                }
+            }
+            
+            return foundComponents;
+        }
+
+        function approximateKeyMatch(line, keys) {
+            const normLine = line.toLowerCase().replace(/\s+/g, '');
+            for (const key of keys) {
+                if (normLine.includes(key.replace(/\s+/g, '').toLowerCase())) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        function renderBloodComponents(components) {
+            componentsGrid.innerHTML = '';
+            
+            if (Object.keys(components).length === 0) {
+                componentsGrid.innerHTML = `
+                    <div class="col-span-2 text-center py-8 text-gray-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        No recognizable blood components detected.
+                    </div>
+                `;
+                return;
+            }
+
+            for (const [key, value] of Object.entries(components)) {
+                if (!bloodComponents[key]) continue;
+                
+                const comp = bloodComponents[key];
+                const status = getComponentStatus(value, comp.low, comp.high);
+                const percentage = calculatePercentage(value, comp.low, comp.high);
+                
+                const componentCard = document.createElement('div');
+                componentCard.className = 'bg-white p-4 rounded-lg shadow-sm animated-fade-in';
+                componentCard.innerHTML = `
+                    <div class="flex items-center justify-between mb-2">
+                        <h4 class="font-medium text-gray-800">${comp.label}</h4>
+                        <span class="text-xs px-2 py-1 rounded-full ${getStatusColorClass(status)}">
+                            ${status.toUpperCase()}
+                        </span>
+                    </div>
+                    <div class="flex items-center">
+                        <div class="relative w-16 h-16 mr-4">
+                            <svg class="w-full h-full" viewBox="0 0 36 36">
+                                <circle cx="18" cy="18" r="16" fill="none" stroke="#e5e7eb" stroke-width="3"></circle>
+                                <circle cx="18" cy="18" r="16" fill="none" stroke="${getStatusColor(status)}" stroke-width="3" stroke-dasharray="100" stroke-dashoffset="${100 - percentage}" class="progress-ring__circle"></circle>
+                                <text x="18" y="20" text-anchor="middle" font-size="10" font-weight="bold" fill="#374151">${Math.round(percentage)}%</text>
+                            </svg>
+                        </div>
+                        <div>
+                            <div class="text-2xl font-bold text-gray-800">${value} ${comp.units}</div>
+                            <div class="text-sm text-gray-500">Normal range: ${comp.low} - ${comp.high} ${comp.units}</div>
+                        </div>
+                    </div>
+                `;
+                
+                componentsGrid.appendChild(componentCard);
+            }
+        }
+
+        function getComponentStatus(value, low, high) {
+            if (value < low) return 'low';
+            if (value > high) return 'high';
+            return 'normal';
+        }
+
+        function calculatePercentage(value, low, high) {
+            const range = high - low;
+            const normalizedValue = (value - low) / range * 100;
+            return Math.min(Math.max(normalizedValue, 0), 100);
+        }
+
+        function getStatusColor(status) {
+            switch (status) {
+                case 'low': return '#3b82f6'; // blue
+                case 'high': return '#ef4444'; // red
+                default: return '#10b981'; // green
+            }
+        }
+
+        function getStatusColorClass(status) {
+            switch (status) {
+                case 'low': return 'bg-blue-100 text-blue-800';
+                case 'high': return 'bg-red-100 text-red-800';
+                default: return 'bg-green-100 text-green-800';
+            }
+        }
+
+        function calculateHealthRisks(components) {
+            // Simplified risk calculation - in a real app, this would use more sophisticated algorithms
+            const risks = {
+                diabetes: 'low',
+                heart: 'low',
+                kidney: 'low'
+            };
+
+            if (components.Glucose && components.Glucose > 126) {
+                risks.diabetes = 'high';
+            } else if (components.Glucose && components.Glucose > 100) {
+                risks.diabetes = 'medium';
+            }
+
+            if (components.Cholesterol && components.Cholesterol > 200) {
+                risks.heart = 'high';
+            } else if (components.Cholesterol && components.Cholesterol > 180) {
+                risks.heart = 'medium';
+            }
+
+            if (components.Creatinine && components.Creatinine > 1.3) {
+                risks.kidney = 'high';
+            } else if (components.BUN && components.BUN > 20) {
+                risks.kidney = 'medium';
+            }
+
+            return risks;
+        }
+
+        function renderHealthRisks(risks) {
+            // Update diabetes risk card
+            updateRiskCard(diabetesRiskCard, risks.diabetes, 'Diabetes');
+            
+            // Update heart risk card
+            updateRiskCard(heartRiskCard, risks.heart, 'Heart Disease');
+            
+            // Update kidney risk card
+            updateRiskCard(kidneyRiskCard, risks.kidney, 'Kidney Function');
+        }
+
+        function updateRiskCard(card, risk, title) {
+            card.className = `health-risk-card p-4 rounded-lg text-white ${getRiskClass(risk)}`;
+            card.querySelector('.text-2xl').textContent = title === 'Diabetes' ? risk === 'high' ? 'High' : risk === 'medium' ? 'Medium' : 'Low' : 
+                                                       title === 'Heart Disease' ? risk === 'high' ? 'High' : risk === 'medium' ? 'Medium' : 'Low' : 
+                                                       risk === 'high' ? 'High' : risk === 'medium' ? 'Medium' : 'Low';
+        }
+
+        function getRiskClass(risk) {
+            switch (risk) {
+                case 'high': return 'health-risk-high';
+                case 'medium': return 'health-risk-medium';
+                default: return 'health-risk-low';
+            }
+        }
+
+        function renderTrendsChart(components) {
+            const ctx = document.getElementById('trends-chart').getContext('2d');
+            
+            // Sample data - in a real app, this would come from historical records
+            const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+            const glucoseData = [95, 98, 102, 105, 108, 110];
+            const hemoglobinData = [14.5, 14.2, 13.8, 13.5, 13.2, 13.0];
+            
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Glucose (mg/dL)',
+                            data: glucoseData,
+                            borderColor: '#3b82f6',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            tension: 0.3,
+                            fill: true
+                        },
+                        {
+                            label: 'Hemoglobin (g/dL)',
+                            data: hemoglobinData,
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            tension: 0.3,
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: false
+                        }
+                    }
+                }
+            });
+        }
+
+        function copyOcrText() {
+            navigator.clipboard.writeText(ocrText.textContent)
+                .then(() => {
+                    copyTextBtn.innerHTML = `
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                        </svg>
+                        Copied!
+                    `;
+                    setTimeout(() => {
+                        copyTextBtn.innerHTML = `
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                            </svg>
+                            Copy Text
+                        `;
+                    }, 2000);
+                })
+                .catch(err => {
+                    console.error('Failed to copy text: ', err);
+                });
+        }
+
+        function downloadReport() {
+            // In a real app, this would generate a comprehensive PDF report
+            const components = parseBloodReportText(ocrText.textContent);
+            const risks = calculateHealthRisks(components);
+            
+            const report = {
+                date: new Date().toLocaleDateString(),
+                bloodComponents: components,
+                healthRisks: risks,
+                extractedText: ocrText.textContent
+            };
+            
+            const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `blood_report_analysis_${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        function resetApp() {
+            // Reset file input
+            fileInput.value = '';
+            fileName.textContent = '';
+            fileName.classList.add('hidden');
+            
+            // Reset progress
+            progressBar.style.width = '0%';
+            progressPercent.textContent = '0%';
+            ocrProgress.classList.add('hidden');
+            
+            // Show upload area
+            dropArea.classList.remove('hidden');
+            
+            // Hide results
+            bloodComponentsSection.classList.add('hidden');
+            healthRiskSection.classList.add('hidden');
+            trendsSection.classList.add('hidden');
+            ocrTextContainer.classList.add('hidden');
+            
+            // Hide buttons
+            clearBtn.classList.add('hidden');
+            downloadBtn.classList.add('hidden');
+            
+            // Show empty state
+            emptyState.classList.remove('hidden');
+            
+            // Clear chart if exists
+            const chartCanvas = document.getElementById('trends-chart');
+            if (chartCanvas) {
+                chartCanvas.remove();
+                const newCanvas = document.createElement('canvas');
+                newCanvas.id = 'trends-chart';
+                newCanvas.height = 300;
+                trendsSection.querySelector('.bg-white').appendChild(newCanvas);
+            }
+        }
+
+        // Initialize the app
+        resetApp();
+    </script>
+</body>
+</html>
