@@ -103,12 +103,20 @@
                 <div id="results-container" class="glass-card p-6">
                     <div class="flex justify-between items-center mb-6">
                         <h2 class="text-xl font-semibold text-gray-800">Analysis Results</h2>
-                        <button id="download-btn" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors hidden">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline mr-1" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
-                            </svg>
-                            Download Report
-                        </button>
+                        <div class="flex space-x-2">
+                            <button id="download-data-btn" class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors hidden">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline mr-1" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                </svg>
+                                Download CSV
+                            </button>
+                            <button id="download-btn" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors hidden">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline mr-1" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                </svg>
+                                Download Report
+                            </button>
+                        </div>
                     </div>
 
                     <div id="empty-state" class="text-center py-12">
@@ -209,7 +217,14 @@
             'Bilirubin': { label: "Bilirubin", low: 0.1, high: 1.2, units: 'mg/dL', keys: ['bilirubin'] },
             'ALP': { label: "Alkaline Phosphatase (ALP)", low: 44, high: 147, units: 'U/L', keys: ['alkaline phosphatase', 'alp'] },
             'ALT': { label: "Alanine Aminotransferase (ALT)", low: 7, high: 55, units: 'U/L', keys: ['alanine aminotransferase', 'alt'] },
-            'AST': { label: "Aspartate Aminotransferase (AST)", low: 8, high: 48, units: 'U/L', keys: ['aspartate aminotransferase', 'ast'] }
+            'AST': { label: "Aspartate Aminotransferase (AST)", low: 8, high: 48, units: 'U/L', keys: ['aspartate aminotransferase', 'ast'] },
+            'BMI': { label: "Body Mass Index (BMI)", low: 18.5, high: 24.9, units: 'kg/m²', keys: ['bmi', 'body mass index'] },
+            'BloodPressure': { label: "Blood Pressure", low: 90, high: 120, units: 'mmHg', keys: ['blood pressure', 'bp'] },
+            'SkinThickness': { label: "Skin Thickness", low: 0, high: 50, units: 'mm', keys: ['skin thickness', 'triceps skinfold thickness'] },
+            'Insulin': { label: "Insulin", low: 0, high: 25, units: 'μU/mL', keys: ['insulin'] },
+            'DiabetesPedigreeFunction': { label: "Diabetes Pedigree Function", low: 0, high: 2.5, units: '', keys: ['diabetes pedigree function', 'pedigree function'] },
+            'Age': { label: "Age", low: 0, high: 100, units: 'years', keys: ['age', 'patient age'] },
+            'Pregnancies': { label: "Pregnancies", low: 0, high: 20, units: '', keys: ['pregnancies', 'number of pregnancies'] }
         };
 
         // DOM Elements
@@ -221,6 +236,7 @@
         const progressPercent = document.getElementById('progress-percent');
         const clearBtn = document.getElementById('clear-btn');
         const downloadBtn = document.getElementById('download-btn');
+        const downloadDataBtn = document.getElementById('download-data-btn');
         const emptyState = document.getElementById('empty-state');
         const bloodComponentsSection = document.getElementById('blood-components');
         const componentsGrid = document.getElementById('components-grid');
@@ -241,6 +257,7 @@
         clearBtn.addEventListener('click', resetApp);
         copyTextBtn.addEventListener('click', copyOcrText);
         downloadBtn.addEventListener('click', downloadReport);
+        downloadDataBtn.addEventListener('click', downloadDiabetesData);
 
         // Functions
         function handleDragOver(e) {
@@ -310,6 +327,7 @@
                 // Show clear button
                 clearBtn.classList.remove('hidden');
                 downloadBtn.classList.remove('hidden');
+                downloadDataBtn.classList.remove('hidden');
 
                 // Process the extracted text
                 const extractedText = data.text;
@@ -559,6 +577,39 @@
             URL.revokeObjectURL(url);
         }
 
+        function downloadDiabetesData() {
+            const components = parseBloodReportText(ocrText.textContent);
+            
+            // Default values for missing data
+            const diabetesData = {
+                Pregnancies: components.Pregnancies || 0,
+                Glucose: components.Glucose || 0,
+                BloodPressure: components.BloodPressure || 0,
+                SkinThickness: components.SkinThickness || 0,
+                Insulin: components.Insulin || 0,
+                BMI: components.BMI || 0,
+                DiabetesPedigreeFunction: components.DiabetesPedigreeFunction || 0,
+                Age: components.Age || 0
+            };
+
+            // Create CSV content
+            const csvContent = [
+                'Pregnancies,Glucose,BloodPressure,SkinThickness,Insulin,BMI,DiabetesPedigreeFunction,Age',
+                `${diabetesData.Pregnancies},${diabetesData.Glucose},${diabetesData.BloodPressure},${diabetesData.SkinThickness},${diabetesData.Insulin},${diabetesData.BMI},${diabetesData.DiabetesPedigreeFunction},${diabetesData.Age}`
+            ].join('\n');
+
+            // Create download link
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `diabetes_data_${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
         function resetApp() {
             // Reset file input
             fileInput.value = '';
@@ -581,6 +632,7 @@
             // Hide buttons
             clearBtn.classList.add('hidden');
             downloadBtn.classList.add('hidden');
+            downloadDataBtn.classList.add('hidden');
             
             // Show empty state
             emptyState.classList.remove('hidden');
